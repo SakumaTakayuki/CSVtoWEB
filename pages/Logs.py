@@ -33,7 +33,6 @@ st.download_button("CSVとしてダウンロード", csv, "logs.csv", "text/csv"
 
 st.write("---")
 
-# 📌 各 Run の詳細ログ（RunDetail）を expander で表示
 st.subheader("詳細ログ")
 
 for log in logs_result:
@@ -41,14 +40,12 @@ for log in logs_result:
         f"Run ID: {log.id} [{log.file_name}]（{log.timestamp}）  |  成功 {log.success} / 失敗 {log.failed}）"
     ):
 
-        # ---- RunDetail を取得 ----
-        details = get_run_details(log.id)  # ← これだけでOK（あとで関数説明します）
+        details = get_run_details(log.id)
 
         if not details:
             st.info("詳細ログはありません")
             continue
 
-        # 詳細を DataFrame 化
         details_df = pd.DataFrame(
             [
                 {
@@ -61,7 +58,6 @@ for log in logs_result:
             ]
         )
 
-        # 色付け（失敗行を赤）
         def highlight_row(row):
             if row["結果"] == "エラー":
                 return ["background-color: #ffdddd"] * len(row)
