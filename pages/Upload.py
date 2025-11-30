@@ -2,13 +2,17 @@ import streamlit as st
 import pandas as pd
 from modules.csv_loader import load_csv
 from modules.selenium_runner import run_selenium_process
-from modules.log_manager import save_log
-
+from modules.log_manager import save_log, get_run_details_error
+import json
 
 st.title("CSVアップロード")
 
 # CSV ファイルアップロード
-uploaded_file = st.file_uploader("CSVファイルを選択", type=["csv"])
+uploaded_file = st.file_uploader(
+    label="CSVファイルをここにドラッグ＆ドロップ、もしくは「Browse filesボタン」から選択してください（1ファイル200MBまで）",
+    type=["csv"],
+    accept_multiple_files=False,
+)
 
 df = None
 
@@ -35,13 +39,28 @@ if st.button("▶ Web自動登録スタート"):
         st.info("処理を開始します...")
 
         result = run_selenium_process(df, check_only)
-        save_log(result)
-
-        if result["status"] == "success":
-            st.success("Selenium実行成功！")
+        if check_only:
+            st.success("動作確認完了！")
         else:
-            st.error("エラーが発生しました")
-            st.json(result)
+            result.file_name = uploaded_file.name
+            save_log(result)
+            if result.status == "成功":
+                st.success("Selenium実行成功！")
+            else:
+                details = get_run_details_error(result.id)
+                details_df = pd.DataFrame(
+                    [
+                        {
+                            "行番号": d.row_number,
+                            "データ": json.dumps(d.data, ensure_ascii=False),
+                            "結果": d.result,
+                            "エラー内容": d.error_message,
+                        }
+                        for d in details
+                    ]
+                )
+                st.error("エラーが発生しました")
+                st.dataframe(details_df)
 
 with st.sidebar:
     st.page_link("app.py", label="ダッシュボード")
