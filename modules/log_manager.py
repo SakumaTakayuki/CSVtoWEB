@@ -4,10 +4,11 @@ from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
 
-session = SessionLocal()
+def get_session():
+    return SessionLocal()
 
 
-def save_log(result):
+def save_log(session, result):
     now = datetime.now(ZoneInfo("Asia/Tokyo"))
     str_now = now.strftime("%Y/%m/%d %H:%M:%S")
     result.timestamp = datetime.strptime(str_now, "%Y/%m/%d %H:%M:%S").replace(
@@ -17,7 +18,7 @@ def save_log(result):
     session.commit()
 
 
-def get_logs(filter_option="全て"):
+def get_logs(session, filter_option="全て"):
     if filter_option == "成功":
         return (
             session.query(Run)
@@ -36,7 +37,7 @@ def get_logs(filter_option="全て"):
         return session.query(Run).order_by(Run.timestamp.desc()).all()
 
 
-def get_run_details(run_id: int):
+def get_run_details(session, run_id: int):
     return (
         session.query(RunDetail)
         .filter(RunDetail.run_id == run_id)
@@ -45,7 +46,7 @@ def get_run_details(run_id: int):
     )
 
 
-def get_run_details_error(run_id: int):
+def get_run_details_error(session, run_id: int):
     return (
         session.query(RunDetail)
         .filter(RunDetail.run_id == run_id, RunDetail.result == "エラー")
@@ -54,18 +55,18 @@ def get_run_details_error(run_id: int):
     )
 
 
-def get_today_count():
+def get_today_count(session):
     return session.query(Run).filter(Run.timestamp >= date.today()).count()
 
 
-def get_latest_log():
+def get_latest_log(session):
     logs = session.query(Run).order_by(Run.id.desc()).first()
     if logs is None:
         return "-"
     return logs.status
 
 
-def get_success_rate():
+def get_success_rate(session):
     successes = session.query(Run).filter(Run.status == "成功").count()
     logsCount = session.query(Run).count()
     if successes == 0 or logsCount == 0:
