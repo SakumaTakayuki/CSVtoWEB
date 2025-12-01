@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 from modules.csv_loader import load_csv
 from modules.selenium_runner import run_selenium_process
-from modules.log_manager import save_log, get_run_details_error
+from modules.log_manager import get_session, save_log, get_run_details_error
 import json
+
+session = get_session()
 
 st.title("CSVアップロード")
 
@@ -43,24 +45,30 @@ if st.button("▶ Web自動登録スタート"):
             st.success("動作確認完了！")
         else:
             result.file_name = uploaded_file.name
-            save_log(result)
-            if result.status == "成功":
-                st.success("Selenium実行成功！")
-            else:
-                details = get_run_details_error(result.id)
-                details_df = pd.DataFrame(
-                    [
-                        {
-                            "行番号": d.row_number,
-                            "データ": json.dumps(d.data, ensure_ascii=False),
-                            "結果": d.result,
-                            "エラー内容": d.error_message,
-                        }
-                        for d in details
-                    ]
-                )
-                st.error("エラーが発生しました")
-                st.dataframe(details_df)
+            session = get_session()
+            try:
+                save_log(session, result)
+                if result.status == "成功":
+                    st.success("Selenium実行成功！")
+                else:
+                    details = get_run_details_error(session, result.id)
+                    details_df = pd.DataFrame(
+                        [
+                            {
+                                "行番号": d.row_number,
+                                "データ": json.dumps(d.data, ensure_ascii=False),
+                                "結果": d.result,
+                                "エラー内容": d.error_message,
+                            }
+                            for d in details
+                        ]
+                    )
+                    st.error("エラーが発生しました")
+                    st.dataframe(details_df)
+            except Exception as e:
+                st.error(f"ログ保存中にエラーが発生しました: {e}")
+            finally:
+                session.close()
 
 with st.sidebar:
     st.page_link("app.py", label="ダッシュボード")
