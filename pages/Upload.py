@@ -58,6 +58,7 @@ if st.button("▶ Web自動登録スタート"):
                                 "行番号": d.row_number,
                                 "データ": json.dumps(d.data, ensure_ascii=False),
                                 "結果": d.result,
+                                "エラー箇所": d.error_stage,
                                 "エラー内容": d.error_message,
                             }
                             for d in details
