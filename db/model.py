@@ -28,6 +28,7 @@ class RunDetail(Base):
     row_number = Column(Integer)
     data = Column(JSON)  # 登録に使った1行分の情報
     result = Column(String)  # "成功" or "エラー"
+    error_stage = Column(String, nullable=True)  # エラー発生箇所
     error_message = Column(String, nullable=True)
 
     run = relationship("Run", back_populates="details")

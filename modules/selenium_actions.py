@@ -1,7 +1,11 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    WebDriverException,
+)
 
 
 def wait(driver, by, value, timeout=10):
@@ -18,7 +22,9 @@ def wait_all(driver, by, value, timeout=10):
 
 def register_one(driver, row):
     try:
-        driver.get("https://testsite-production-df80.up.railway.app/")
+        # ===== stage: input =====
+        # driver.get("https://testsite-production-df80.up.railway.app/")
+        driver.get("http://127.0.0.1:8000/")
 
         age_input = wait(driver, By.NAME, "age")
         age_input.clear()
@@ -38,23 +44,54 @@ def register_one(driver, row):
         food_input.clear()
         food_input.send_keys(row["food"])
 
+        # ===== stage: submit =====
         submit_btn = wait(driver, By.CSS_SELECTOR, "button[type='submit']")
         submit_btn.click()
 
+        # ===== stage: confirm =====
         try:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located(
                     (By.XPATH, "//h1[contains(text(), '回答ありがとうございました！')]")
                 )
             )
-            return True, None
+            return {
+                "success": True,
+                "stage": None,
+                "message": None,
+            }
 
         except TimeoutException:
-            return False, "回答失敗（完了ページが表示されない）"
+            return {
+                "success": False,
+                "stage": "confirm",
+                "message": "完了ページが表示されません",
+            }
 
     except TimeoutException as e:
-        return False, f"要素待機 Timeout: {str(e)}"
-    # except NoSuchElementException as e:
-    #     return False, f"要素が見つからない: {str(e)}"
+        return {
+            "success": False,
+            "stage": "input",
+            "message": f"要素待機 Timeout: {str(e)}",
+        }
+
+    except NoSuchElementException as e:
+        return {
+            "success": False,
+            "stage": "input",
+            "message": f"要素が見つかりません: {str(e)}",
+        }
+
+    except WebDriverException as e:
+        return {
+            "success": False,
+            "stage": "unexpected",
+            "message": f"ブラウザエラー: {str(e)}",
+        }
+
     except Exception as e:
-        return False, f"その他のエラー: {str(e)}"
+        return {
+            "success": False,
+            "stage": "unexpected",
+            "message": f"その他のエラー: {str(e)}",
+        }
