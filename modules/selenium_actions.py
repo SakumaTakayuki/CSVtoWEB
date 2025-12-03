@@ -50,10 +50,10 @@ def register_one(driver, row):
 
         # ===== stage: confirm =====
         try:
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//h1[contains(text(), '回答ありがとうございました！')]")
-                )
+            wait(
+                driver,
+                By.XPATH,
+                "//h1[contains(text(), '回答ありがとうございました！')]",
             )
             return {
                 "success": True,
@@ -67,6 +67,13 @@ def register_one(driver, row):
                 "stage": "confirm",
                 "message": "完了ページが表示されません",
             }
+
+    except TimeoutError as e:
+        return {
+            "success": False,
+            "stage": "input",
+            "message": f"要素待機 Timeout: {str(e)}",
+        }
 
     except TimeoutException as e:
         return {
