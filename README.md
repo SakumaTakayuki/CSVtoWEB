@@ -59,6 +59,8 @@ UI 部分は Streamlit、ブラウザ操作は Selenium、ログ管理は SQLite
 ---
 
 ## 🎥 デモ動画
+https://github.com/user-attachments/assets/e273c326-2261-487c-994f-78ffcd4db0ce
+
 
 ---
 
